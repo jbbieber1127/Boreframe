@@ -54,7 +54,7 @@ public class ApplicationController implements Initializable {
     ((DesiredCapabilities) caps).setCapability("takesScreenshot", true);
     ((DesiredCapabilities) caps)
         .setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
-            "C:\\Users\\John\\IdeaProjects\\Boreframe\\out\\production\\Warframe Price Checker\\drivers\\phantomjs.exe");
+            "resources/drivers/phantomjs.exe");
 
     driver = new PhantomJSDriver(caps);
     driver.get("https://warframe.market");
