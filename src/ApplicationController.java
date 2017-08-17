@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -54,8 +55,8 @@ public class ApplicationController implements Initializable {
 
     System.setProperty("webdriver.chrome.driver","resources/drivers/chromedriver.exe");
     ChromeOptions chromeOptions = new ChromeOptions();
-    chromeOptions.addArguments("--headless");
-    chromeOptions.addArguments("--start-maximized");
+//    chromeOptions.addArguments("--headless");
+//    chromeOptions.addArguments("--start-maximized");
     driver = new ChromeDriver(chromeOptions);
 
 //    driver.manage().window().setSize(new Dimension(1920, 1080));
@@ -84,32 +85,43 @@ public class ApplicationController implements Initializable {
     int total = 0;
     int count = 0;
 
-    List<WebElement> elements = driver.findElementsByCssSelector("div[class=order-table]");
-    System.out.println(elements.size());
-    System.out.println(elements.get(0).getText());
-    for (int i = 0; i < elements.size(); i++) {
-      String pricePath =
-          "/html[@class=' js flexbox canvas canvastext webgl no-touch geolocation postmessage websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface no-generatedcontent video audio localstorage sessionstorage webworkers applicationcache svg inlinesvg smil svgclippaths']/body[@class='site-warframe']/div[@class='wrapper']/div[@class='container w-wrapper']/div[@class='row ']/div[@class='col-sm-12 inner-blocks']/div[@id='order-cont']/div[@id='sell']/div[@class='order-table']/table[@id='sell-table']/tbody/tr["
-              + (i + 1) + "]/td[2]";
-      String numPath =
-          "/html[@class=' js flexbox canvas canvastext webgl no-touch geolocation postmessage websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface no-generatedcontent video audio localstorage sessionstorage webworkers applicationcache svg inlinesvg smil svgclippaths']/body[@class='site-warframe']/div[@class='wrapper']/div[@class='container w-wrapper']/div[@class='row ']/div[@class='col-sm-12 inner-blocks']/div[@id='order-cont']/div[@id='sell']/div[@class='order-table']/table[@id='sell-table']/tbody/tr["
-              + (i + 1) + "]/td[3]";
-      WebElement priceElement = driver.findElement(By.xpath(pricePath));
-      WebElement numElement = driver.findElement(By.xpath(numPath));
-      System.out.println(i);
-      int price = Integer.parseInt(priceElement.getText());
-      int num = Integer.parseInt(numElement.getText());
-      total += price * num;
-      count += num;
+    // Find the Sell orders
+    try {
+      WebElement sellTable = driver.findElementByCssSelector("div[id=sell]")
+          .findElement(By.cssSelector("tbody[aria-live=polite]"));
+      List<WebElement> sellOrders = sellTable.findElements(By.cssSelector("tr[role=row]"));
+      System.out.println("There are " + sellOrders.size() + " sell orders.");
+      for(int i = 0; i < sellOrders.size(); i++){
+        WebElement curOrder = sellOrders.get(i);
+        List<WebElement> curOrderComponents = curOrder.findElements(By.cssSelector("td"));
+        int curOrderPrice = Integer.parseInt(curOrderComponents.get(1).getText());
+        int curOrderCount = Integer.parseInt(curOrderComponents.get(2).getText());
+        total += curOrderPrice*curOrderCount;
+        count += curOrderCount;
+//        System.out.println("This order is " + curOrderCount + " items, for " + curOrderPrice + " platinum each.");
+      }
+    } catch (NoSuchElementException e){
+      System.out.println("There are no sell orders for this item.");
     }
-    valueLabel.setText("Value: ~" + (count > 0 ? ((int) total / count) : 0) + " platinum");
+
+    // Find the buy orders
+    try {
+      WebElement buyTable = driver.findElementByCssSelector("div[id=buy]")
+          .findElement(By.cssSelector("tbody[aria-live=polite]"));
+      List<WebElement> buyOrders = buyTable.findElements(By.cssSelector("tr[role=row]"));
+      System.out.println("There are " + buyOrders.size() + " buy orders.");
+    } catch (NoSuchElementException e){
+      System.out.println("There are no buy orders for this item.");
+    }
+
+    valueLabel.setText("Sell Value: ~" + (count > 0 ? ((int) total / count) : 0) + " platinum");
   }
 
   @FXML
   private void searchButtonClicked() {
     searchMarket(searchBar.getText());
     try {
-      Thread.sleep(1000);
+      Thread.sleep(300);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
