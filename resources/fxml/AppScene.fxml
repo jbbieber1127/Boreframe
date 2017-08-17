@@ -10,7 +10,8 @@
    <children>
       <TextField fx:id="searchBar" layoutX="65.0" layoutY="81.0" />
       <Button layoutX="261.0" layoutY="81.0" mnemonicParsing="false" onMouseClicked="#searchButtonClicked" text="Button" />
-      <Label fx:id="valueLabel" layoutX="294.0" layoutY="281.0" prefHeight="86.0" prefWidth="243.0" text="Label" />
-      <ImageView fx:id="webview" fitHeight="2500.0" fitWidth="1500.0" layoutX="424.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="sellValueLabel" layoutX="65.0" layoutY="235.0" prefHeight="86.0" prefWidth="243.0" text="Label" />
+      <ImageView fx:id="webview" fitHeight="583.0" fitWidth="353.0" layoutX="424.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="buyValueLabel" layoutX="65.0" layoutY="321.0" prefHeight="86.0" prefWidth="243.0" text="Label" />
    </children>
 </AnchorPane>

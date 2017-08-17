@@ -35,13 +35,15 @@ public class ApplicationController implements Initializable {
   private WebElement buttonElement;
 
   @FXML
-  private Button searchButton;
-  @FXML
   private TextField searchBar;
   @FXML
-  private Label valueLabel;
+  private Label sellValueLabel;
+  @FXML
+  private Label buyValueLabel;
   @FXML
   private ImageView webview;
+
+  private String pageSource = "";
 
   @Override
   public void initialize(URL location, ResourceBundle resources) {
@@ -71,19 +73,26 @@ public class ApplicationController implements Initializable {
     searchElement.clear();
     searchElement.sendKeys(item);
     buttonElement.click();
-    File src = driver.getScreenshotAs(OutputType.FILE);
 
+    pageSource = driver.getPageSource();
+
+    /* // Screenshot
     try {
+      File src = driver.getScreenshotAs(OutputType.FILE);
       webview.setImage(SwingFXUtils.toFXImage(ImageIO.read(src), null));
     } catch (IOException e) {
       e.printStackTrace();
     }
+    */
 
   }
 
   private void evaluate() {
-    int total = 0;
-    int count = 0;
+    System.out.println(pageSource);
+    int stotal = 0;
+    int scount = 0;
+    int btotal = 0;
+    int bcount = 0;
 
     // Find the Sell orders
     try {
@@ -96,8 +105,8 @@ public class ApplicationController implements Initializable {
         List<WebElement> curOrderComponents = curOrder.findElements(By.cssSelector("td"));
         int curOrderPrice = Integer.parseInt(curOrderComponents.get(1).getText());
         int curOrderCount = Integer.parseInt(curOrderComponents.get(2).getText());
-        total += curOrderPrice*curOrderCount;
-        count += curOrderCount;
+        stotal += curOrderPrice*curOrderCount;
+        scount += curOrderCount;
 //        System.out.println("This order is " + curOrderCount + " items, for " + curOrderPrice + " platinum each.");
       }
     } catch (NoSuchElementException e){
@@ -110,11 +119,21 @@ public class ApplicationController implements Initializable {
           .findElement(By.cssSelector("tbody[aria-live=polite]"));
       List<WebElement> buyOrders = buyTable.findElements(By.cssSelector("tr[role=row]"));
       System.out.println("There are " + buyOrders.size() + " buy orders.");
+      for(int i = 0; i < buyOrders.size(); i++){
+        WebElement curOrder = buyOrders.get(i);
+        List<WebElement> curOrderComponents = curOrder.findElements(By.cssSelector("td"));
+        int curOrderPrice = Integer.parseInt(curOrderComponents.get(1).getText());
+        int curOrderCount = Integer.parseInt(curOrderComponents.get(2).getText());
+        stotal += curOrderPrice*curOrderCount;
+        scount += curOrderCount;
+//        System.out.println("This order is " + curOrderCount + " items, for " + curOrderPrice + " platinum each.");
+      }
     } catch (NoSuchElementException e){
       System.out.println("There are no buy orders for this item.");
     }
 
-    valueLabel.setText("Sell Value: ~" + (count > 0 ? ((int) total / count) : 0) + " platinum");
+    sellValueLabel.setText("Sell Value: ~" + (scount > 0 ? ((int) stotal / scount) : 0) + " platinum");
+    buyValueLabel.setText("Buy Value: ~" + (bcount > 0 ? ((int) btotal / bcount) : 0) + " platinum");
   }
 
   @FXML
