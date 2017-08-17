@@ -15,7 +15,7 @@ public class Main extends Application{
     primaryStage.setTitle("Price Checker");
     try {
       Parent root = FXMLLoader.load(this.getClass().getResource("/fxml/AppScene.fxml"));
-      primaryStage.setScene(new Scene(root, 500, 500));
+      primaryStage.setScene(new Scene(root, 800, 600));
       primaryStage.show();
     } catch (Exception e) {
       e.printStackTrace();

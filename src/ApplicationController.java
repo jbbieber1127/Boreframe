@@ -40,8 +40,8 @@ public class ApplicationController implements Initializable {
   private TextField searchBar;
   @FXML
   private Label valueLabel;
-  @FXML
-  private ImageView webview;
+//  @FXML
+//  private ImageView webview;
 
   @Override
   public void initialize(URL location, ResourceBundle resources) {
@@ -71,19 +71,21 @@ public class ApplicationController implements Initializable {
     searchElement.clear();
     searchElement.sendKeys(item);
     buttonElement.click();
-    File src = driver.getScreenshotAs(OutputType.FILE);
-
-    try {
-      webview.setImage(SwingFXUtils.toFXImage(ImageIO.read(src), null));
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+//    File src = driver.getScreenshotAs(OutputType.FILE);
+//
+//    try {
+//      webview.setImage(SwingFXUtils.toFXImage(ImageIO.read(src), null));
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
 
   }
 
   private void evaluate() {
     int total = 0;
     int count = 0;
+    boolean nosellers = false;
+    boolean nobuyers = false;
 
     // Find the Sell orders
     try {
@@ -102,6 +104,7 @@ public class ApplicationController implements Initializable {
       }
     } catch (NoSuchElementException e){
       System.out.println("There are no sell orders for this item.");
+      nosellers = true;
     }
 
     // Find the buy orders
@@ -112,9 +115,16 @@ public class ApplicationController implements Initializable {
       System.out.println("There are " + buyOrders.size() + " buy orders.");
     } catch (NoSuchElementException e){
       System.out.println("There are no buy orders for this item.");
+      nobuyers = true;
     }
 
-    valueLabel.setText("Sell Value: ~" + (count > 0 ? ((int) total / count) : 0) + " platinum");
+    //print average price
+    if (nobuyers && nosellers){
+      valueLabel.setText("Could not find item.");
+    }
+    else {
+      valueLabel.setText("Sell Value: ~" + (count > 0 ? ((int) total / count) : 0) + " platinum");
+    }
   }
 
   @FXML
