@@ -37,9 +37,7 @@ public class ApplicationController implements Initializable {
   @FXML
   private TextField searchBar;
   @FXML
-  private Label sellValueLabel;
-  @FXML
-  private Label buyValueLabel;
+  private Label valueLabel;
   @FXML
   private ImageView webview;
 
@@ -74,8 +72,6 @@ public class ApplicationController implements Initializable {
     searchElement.sendKeys(item);
     buttonElement.click();
 
-    pageSource = driver.getPageSource();
-
     /* // Screenshot
     try {
       File src = driver.getScreenshotAs(OutputType.FILE);
@@ -88,11 +84,10 @@ public class ApplicationController implements Initializable {
   }
 
   private void evaluate() {
-    System.out.println(pageSource);
-    int stotal = 0;
-    int scount = 0;
-    int btotal = 0;
-    int bcount = 0;
+    int total = 0;
+    int count = 0;
+    boolean nosellers = false;
+    boolean nobuyers = false;
 
     // Find the Sell orders
     try {
@@ -105,12 +100,12 @@ public class ApplicationController implements Initializable {
         List<WebElement> curOrderComponents = curOrder.findElements(By.cssSelector("td"));
         int curOrderPrice = Integer.parseInt(curOrderComponents.get(1).getText());
         int curOrderCount = Integer.parseInt(curOrderComponents.get(2).getText());
-        stotal += curOrderPrice*curOrderCount;
-        scount += curOrderCount;
+
 //        System.out.println("This order is " + curOrderCount + " items, for " + curOrderPrice + " platinum each.");
       }
     } catch (NoSuchElementException e){
       System.out.println("There are no sell orders for this item.");
+      nosellers = true;
     }
 
     // Find the buy orders
@@ -124,26 +119,85 @@ public class ApplicationController implements Initializable {
         List<WebElement> curOrderComponents = curOrder.findElements(By.cssSelector("td"));
         int curOrderPrice = Integer.parseInt(curOrderComponents.get(1).getText());
         int curOrderCount = Integer.parseInt(curOrderComponents.get(2).getText());
-        stotal += curOrderPrice*curOrderCount;
-        scount += curOrderCount;
 //        System.out.println("This order is " + curOrderCount + " items, for " + curOrderPrice + " platinum each.");
       }
     } catch (NoSuchElementException e){
       System.out.println("There are no buy orders for this item.");
+      nobuyers = true;
     }
+    //print average price
+    if (nobuyers && nosellers){
+      valueLabel.setText("Could not find item.");
+    }
+    else {
+      valueLabel.setText("Sell Value: ~" + (count > 0 ? ((int) total / count) : 0) + " platinum");
+    }
+  }
 
-    sellValueLabel.setText("Sell Value: ~" + (scount > 0 ? ((int) stotal / scount) : 0) + " platinum");
-    buyValueLabel.setText("Buy Value: ~" + (bcount > 0 ? ((int) btotal / bcount) : 0) + " platinum");
+  private void parsePage(){
+    String sellTableString = "<div role=\"tabpanel\" class=\"tab-pane fade in active\" id=\"sell\">";
+    int sellTableIndex = pageSource.indexOf(sellTableString);
+    String buyTableString = "<div role=\"tabpanel\" class=\"tab-pane fade\" id=\"buy\">";
+    int buyTableIndex = pageSource.indexOf(buyTableString);
+    String endBuyTable = "::after";
+    int endBuyTableIndex = pageSource.indexOf(endBuyTable, buyTableIndex);
+    String sellTable = pageSource.substring(sellTableIndex, buyTableIndex);
+    String ordersExistString = "<tbody aria-live=\"polite\" aria-relevant=\"all\">";
+    if(sellTable.contains(ordersExistString)){
+      String rowString = "role=\"row\"";
+      // Gets rid of the first junk element that we don't need
+      int prevIndex = sellTable.indexOf(rowString);
+      sellTable = sellTable.substring(prevIndex + 1);
+
+      System.out.println(sellTable);
+
+      // Iterate through the orders
+      while(sellTable.contains(rowString)){
+        prevIndex = sellTable.indexOf(rowString);
+        sellTable = sellTable.substring(prevIndex + 1);
+        // Should now be at the start of an order
+
+        String orderElementString = "<td>";
+        prevIndex = sellTable.indexOf(orderElementString);
+        sellTable = sellTable.substring(prevIndex + 1);
+        // Should now be just before the name field of an order
+
+        prevIndex = sellTable.indexOf(orderElementString);
+        sellTable = sellTable.substring(prevIndex + 1);
+        // Should be at the price field of an order
+        System.out.println(sellTable.substring(prevIndex + 4));
+        int price = Integer.parseInt(sellTable.substring(prevIndex + 4, sellTable.indexOf("</td>")));
+
+
+        prevIndex = sellTable.indexOf(orderElementString);
+        sellTable = sellTable.substring(prevIndex + 1);
+        // Should be at the quantity field of an order
+        int count = Integer.parseInt(sellTable.substring(prevIndex + 4, sellTable.indexOf("</td>")));
+        System.out.println("The price of this item is: " + price + " platinum for each of " + count + " items.");
+      };
+
+    }else{
+      // There are no sell orders
+    }
+    String buyTable = pageSource.substring(buyTableIndex, endBuyTableIndex);
+    if(buyTable.contains(ordersExistString)){
+
+    }else{
+      // There are no buy orders
+    }
+    System.out.println(sellTable);
   }
 
   @FXML
   private void searchButtonClicked() {
     searchMarket(searchBar.getText());
     try {
-      Thread.sleep(300);
+      Thread.sleep(500);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-    evaluate();
+    pageSource = driver.getPageSource();
+    parsePage();
+//    evaluate();
   }
 }
